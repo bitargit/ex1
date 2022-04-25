@@ -1,7 +1,3 @@
-//
-// Created by Assaf on 07/03/2022.
-//
-
 #ifndef HW1_RLELIST_H
 #define HW1_RLELIST_H
 
