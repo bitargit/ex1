@@ -3,23 +3,10 @@
 #include <assert.h>
 #include <string.h>
 //#define NDEGBUG
-#define ERROR -1
-#define NEXT_LINE '\n'
-#define MULTIPLIER_EXPORT_STRING 3
-#define SIZE_OF_EXPORTED_LINK 4
-#define CHARACTER 0
-#define NUMBER_OF_CHARACTERS 1
-#define END_LINE 2
-#define END_OF_STRING 3
-#define NULL_CHAR '\0'
 
 
-typedef enum {
-    NODE_INDEX,
-    CHAR_INDEX
-} Index;
-
-static int findIndex(RLEList list, int index, Index type);
+static int findIndex(RLEList list, int index);
+static int numberOfDigits(int number);
 
 typedef struct RLEList_t{
     int numberOfCharacters;
@@ -78,7 +65,7 @@ RLEListResult RLEListAppend(RLEList list, char value)
 int RLEListSize(RLEList list)
 {
     if (list == NULL){
-        return ERROR;
+        return RLE_LIST_ERROR;
     }
     int total = 0;
     RLEList current = list->next;
@@ -98,7 +85,7 @@ RLEListResult RLEListRemove(RLEList list, int index)
     if (index >= RLEListSize(list) || index < 0){
         return RLE_LIST_INDEX_OUT_OF_BOUNDS;
     }
-    int numberOfNodes = findIndex(list, index, NODE_INDEX);
+    int numberOfNodes = findIndex(list, index);
     int i = 0;
     RLEList current = list;
     while (i < numberOfNodes - 1){
@@ -124,38 +111,32 @@ RLEListResult RLEListRemove(RLEList list, int index)
     return RLE_LIST_SUCCESS;
 }
 
-static int findIndex(RLEList list, int index, Index type)
+static int findIndex(RLEList list, int index)
 {
     RLEList current = list->next;
     int countNodes = 1, count = 0;
-    while (count < index){
-        if (count + current->numberOfCharacters <= index){
-            count += current->numberOfCharacters;
-            current = current->next;
-            countNodes++;
-        }
-        else{
-            while (count < index){
-                count++;
-            }
-        }
+    while (count + current->numberOfCharacters <= index){
+        count += current->numberOfCharacters;
+        current = current->next;
+        countNodes++;
     }
-    return (type == NODE_INDEX ? countNodes : count);
+    return countNodes;
 }
+
 
 char RLEListGet(RLEList list, int index, RLEListResult *result)//result return values problematic
 {
     if (list == NULL){
-        *result = (result != NULL) ? RLE_LIST_NULL_ARGUMENT : *result;
+        *result = (result == NULL) ? *result :RLE_LIST_NULL_ARGUMENT;
         return 0;
     }
 
     if (index >= RLEListSize(list) || index < 0){
-        *result = (result != NULL) ? RLE_LIST_INDEX_OUT_OF_BOUNDS : *result;
+        *result = (result == NULL) ? *result : RLE_LIST_INDEX_OUT_OF_BOUNDS;
         return 0;
     }
 
-    int charIndexInList = findIndex(list, index, NODE_INDEX);
+    int charIndexInList = findIndex(list, index);
     RLEList current = list;
     int i = 0;
 
@@ -163,8 +144,11 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)//result return v
         current = current->next;
         i++;
     }
-    //*result = (result != NULL) ? RLE_LIST_SUCCESS : *result;
-   // printf("%d\n", *result);
+    printf("Before\n");
+    if (result != NULL)
+    *result = (result == NULL) ?  *result : RLE_LIST_SUCCESS;
+    printf("After\n");
+    printf("%d\n", result);
     return current->character;
 }
 
@@ -181,37 +165,55 @@ RLEListResult RLEListMap(RLEList list, MapFunction map_function){
     return RLE_LIST_SUCCESS;
 }
 
-char* RLEListExportToString(RLEList list, RLEListResult* result){
-    if (list == NULL){
-        *result = (result != NULL) ? RLE_LIST_NULL_ARGUMENT : *result;
-        return NULL;
-    }
-    int sizeOfList = RLEListSize(list);
-    int numberOfNodes = findIndex(list, sizeOfList - 1, NODE_INDEX);
-    char* formatedString = malloc(numberOfNodes * MULTIPLIER_EXPORT_STRING);
-    if (!formatedString){
-        *result = (result != NULL) ? RLE_LIST_ERROR : *result;
-        return NULL;
-    }
+char* RLEListExportToString(RLEList list, RLEListResult* result)
+{
+    int stringLength = 0;
     RLEList current = list->next;
-    char *tempString = malloc(SIZE_OF_EXPORTED_LINK);
-    if (!tempString){
-        *result = (result != NULL) ? RLE_LIST_ERROR : *result;
-        return NULL;
-    }
-    while (current != NULL){
-        tempString[CHARACTER] = current->character;
-        tempString[NUMBER_OF_CHARACTERS] = current->numberOfCharacters;//convert to string
-        tempString[END_LINE] = NEXT_LINE;
-        tempString[END_OF_STRING] = NULL_CHAR;
-        //printf("%s", tempString);
-        strcat(formatedString, tempString);
+    while (current != NULL)
+    {
+        stringLength += numberOfDigits(current->numberOfCharacters);
+        stringLength += 2;
         current = current->next;
     }
-    free(tempString);
-    return formatedString;
+
+
+    char *exportedString = (char*) malloc(sizeof(char) * (stringLength + 1)  ); //+1 is for the '\0'
+
+    current = list->next;
+    int index = 0;
+    //exportedString[stringLength] = '\0';
+    while (current != NULL)
+    {
+        exportedString[index] = current->character;
+        index++;
+        //printf("index: %d\n", index);
+        sprintf(&exportedString[index], "%d", current->numberOfCharacters);
+        //printf("string: %s\n", exportedString);
+        index += numberOfDigits(current->numberOfCharacters);
+        exportedString[index] = '\n';
+        index++;
+        current = current->next;
+    }
+    //exportedString[index] = '\0';
+
+    return exportedString;
 }
 
+static int numberOfDigits(int number)
+{
+    if (number == 0){
+        return 1;
+    }
+
+    int numberOfDigits = 0;
+    while(number > 0)
+    {
+        number /= 10;
+        numberOfDigits++;
+    }
+
+    return numberOfDigits;
+}
 void printList(RLEList list)
 {
     RLEList current = list->next;
