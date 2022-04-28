@@ -229,14 +229,3 @@ static int numberOfDigits(int number)
 
     return numberOfDigits;
 }
-void printList(RLEList list)
-{
-    RLEList current = list->next;
-    while (current != NULL){
-        for(int i = 0; i < current->numberOfCharacters; i++){
-            printf("%c", current->character);
-        }
-        current = current->next;
-    }
-    printf("\n");
-}
