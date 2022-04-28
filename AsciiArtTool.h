@@ -39,6 +39,6 @@ RLEListResult asciiArtPrint(RLEList list, FILE *out_stream);
 */
 RLEListResult asciiArtPrintEncoded(RLEList list, FILE *out_stream);
 RLEListResult asciiInvertImage(RLEList list);
-static char mapList(char current);
+char mapList(char current);
 
 #endif // HW1_ASCII_ART_TOOL_H

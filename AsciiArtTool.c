@@ -2,7 +2,7 @@
 
 #define SPACE ' '
 #define AT_SIGN '@'
-
+#define END_OF_STRING '\0'
 RLEList asciiArtRead(FILE* in_stream) {
     RLEList list = RLEListCreate();
     if(!list){
@@ -48,11 +48,12 @@ RLEListResult asciiArtPrintEncoded(RLEList list, FILE *out_stream)
     }
 
     int i = 0;
-    while(stringExported[i] != '\0'){
+    while(stringExported[i] != END_OF_STRING){
         char current_character = stringExported[i];
         fputc(current_character, out_stream);
         i++;
     }
+    free(stringExported);
     return RLE_LIST_SUCCESS;
 }
 
@@ -61,7 +62,7 @@ RLEListResult asciiInvertImage(RLEList list){
     return RLE_LIST_SUCCESS;
 }
 
-static char mapList(char current){
+char mapList(char current){
     if (current == SPACE){
         current = AT_SIGN;
     }

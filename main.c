@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     
     if (!strcmp(argv[FLAG],ENCODED_FLAG)){
         asciiArtPrintEncoded(list, targetFile);
-        free(list);
+        RLEListDestroy(list);
         fclose(sourceFile);
         fclose(targetFile);
         return 0;
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     else if (!strcmp(argv[FLAG],INVERTED_FLAG)){
         asciiInvertImage(list);
         asciiArtPrint(list, targetFile);
-        free(list);
+        RLEListDestroy(list);
         fclose(sourceFile);
         fclose(targetFile);
         return 0;
