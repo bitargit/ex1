@@ -1,5 +1,8 @@
 #include "AsciiArtTool.h"
 
+#define SPACE ' '
+#define AT_SIGN '@'
+
 RLEList asciiArtRead(FILE* in_stream) {
     RLEList list = RLEListCreate();
     if(!list){
@@ -8,7 +11,6 @@ RLEList asciiArtRead(FILE* in_stream) {
     char character;
     RLEListResult result;
     while ((character = fgetc(in_stream)) != EOF){
-        printf("%c\n", character);
         result = RLEListAppend(list, character);
         if (result != RLE_LIST_SUCCESS){
             //maybe delte list?
@@ -44,7 +46,7 @@ RLEListResult asciiArtPrintEncoded(RLEList list, FILE *out_stream)
     if (!stringExported){
         return RLE_LIST_NULL_ARGUMENT;
     }
-    //printf("exported =\n%s\n", stringExported);
+
     int i = 0;
     while(stringExported[i] != '\0'){
         char current_character = stringExported[i];
@@ -52,4 +54,19 @@ RLEListResult asciiArtPrintEncoded(RLEList list, FILE *out_stream)
         i++;
     }
     return RLE_LIST_SUCCESS;
+}
+
+RLEListResult asciiInvertImage(RLEList list){
+    RLEListMap(list, mapList);
+    return RLE_LIST_SUCCESS;
+}
+
+static char mapList(char current){
+    if (current == SPACE){
+        current = AT_SIGN;
+    }
+    else if(current == AT_SIGN){
+        current = SPACE;
+    }
+    return current;
 }

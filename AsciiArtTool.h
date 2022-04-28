@@ -38,6 +38,7 @@ RLEListResult asciiArtPrint(RLEList list, FILE *out_stream);
 * 	LIST_SUCCESS the RLEList has been successfuly writen to the file.
 */
 RLEListResult asciiArtPrintEncoded(RLEList list, FILE *out_stream);
-
+RLEListResult asciiInvertImage(RLEList list);
+static char mapList(char current);
 
 #endif // HW1_ASCII_ART_TOOL_H
