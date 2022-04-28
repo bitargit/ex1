@@ -4,6 +4,7 @@
 #include <string.h>
 //#define NDEGBUG
 
+#define ADD_CHARACTER_AND_NEXT_LINE 2
 
 static int findIndex(RLEList list, int index);
 static int numberOfDigits(int number);
@@ -124,31 +125,35 @@ static int findIndex(RLEList list, int index)
 }
 
 
-char RLEListGet(RLEList list, int index, RLEListResult *result)//result return values problematic
+char RLEListGet(RLEList list, int index, RLEListResult *result)
 {
     if (list == NULL){
-        *result = (result == NULL) ? *result :RLE_LIST_NULL_ARGUMENT;
+        if (result != NULL){
+            *result = RLE_LIST_NULL_ARGUMENT;
+            return 0;
+        }
         return 0;
     }
 
     if (index >= RLEListSize(list) || index < 0){
-        *result = (result == NULL) ? *result : RLE_LIST_INDEX_OUT_OF_BOUNDS;
+        if (result != NULL){
+            *result = RLE_LIST_INDEX_OUT_OF_BOUNDS;
+            return 0;
+        }
         return 0;
     }
 
     int charIndexInList = findIndex(list, index);
-    RLEList current = list;
+    RLEList current = list->next;
     int i = 0;
 
     while (i < charIndexInList - 1){
         current = current->next;
         i++;
     }
-    printf("Before\n");
-    if (result != NULL)
-    *result = (result == NULL) ?  *result : RLE_LIST_SUCCESS;
-    printf("After\n");
-    printf("%d\n", result);
+    if (result != NULL){
+        *result = RLE_LIST_SUCCESS;
+    }
     return current->character;
 }
 
@@ -167,35 +172,45 @@ RLEListResult RLEListMap(RLEList list, MapFunction map_function){
 
 char* RLEListExportToString(RLEList list, RLEListResult* result)
 {
+    if (list == NULL){
+        if (result != NULL){
+            *result = RLE_LIST_NULL_ARGUMENT;
+        }
+        return NULL;
+    }
     int stringLength = 0;
     RLEList current = list->next;
     while (current != NULL)
     {
         stringLength += numberOfDigits(current->numberOfCharacters);
-        stringLength += 2;
+        stringLength += ADD_CHARACTER_AND_NEXT_LINE;
         current = current->next;
     }
 
-
     char *exportedString = (char*) malloc(sizeof(char) * (stringLength + 1)  ); //+1 is for the '\0'
-
+    if (!exportedString){
+        if (result != NULL){
+            *result = RLE_LIST_ERROR;
+            return NULL;
+        }
+    }
     current = list->next;
     int index = 0;
-    //exportedString[stringLength] = '\0';
     while (current != NULL)
     {
         exportedString[index] = current->character;
         index++;
-        //printf("index: %d\n", index);
         sprintf(&exportedString[index], "%d", current->numberOfCharacters);
-        //printf("string: %s\n", exportedString);
         index += numberOfDigits(current->numberOfCharacters);
         exportedString[index] = '\n';
         index++;
         current = current->next;
     }
-    //exportedString[index] = '\0';
-
+    exportedString[index] = '\0';
+    if (result != NULL){
+        *result = RLE_LIST_SUCCESS;
+        return NULL;
+    }
     return exportedString;
 }
 
