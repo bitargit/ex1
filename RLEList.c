@@ -5,10 +5,11 @@
 //#define NDEGBUG
 
 #define ADD_CHARACTER_AND_NEXT_LINE 2
-
+#define ERROR -1
+#define NEXT_LINE '\n'
 static int findIndex(RLEList list, int index);
 static int numberOfDigits(int number);
-
+static RLEListResult joinTwoAdjacentNodes(RLEList list);
 typedef struct RLEList_t{
     int numberOfCharacters;
     char character;
@@ -66,7 +67,7 @@ RLEListResult RLEListAppend(RLEList list, char value)
 int RLEListSize(RLEList list)
 {
     if (list == NULL){
-        return RLE_LIST_ERROR;
+        return ERROR;
     }
     int total = 0;
     RLEList current = list->next;
@@ -98,14 +99,11 @@ RLEListResult RLEListRemove(RLEList list, int index)
     }
     else{
         RLEList temp = current->next;
-        if (temp->next != NULL && current->character == temp->next->character ){
-            current->numberOfCharacters += temp->next->numberOfCharacters;
-            RLEList deleteSameCharLink = temp->next;
-            current->next = deleteSameCharLink->next;
-            free(deleteSameCharLink);
-        }
-        else{
+        if (temp != NULL){
             current->next = temp->next;
+        }
+        if (temp->next != NULL && current->character == temp->next->character){
+            joinTwoAdjacentNodes(current);
         }
         free(temp);
     }
@@ -156,7 +154,28 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)
     }
     return current->character;
 }
-
+/*
+    if (list == NULL || map_function == NULL){
+        return RLE_LIST_NULL_ARGUMENT;
+    }
+    RLEList current = list->next;
+    current->character = map_function(current->character);
+    RLEList nextNode = current->next;
+    char newChar;
+    while (current != NULL && nextNode != NULL){
+        newChar = map_function(nextNode->character);
+        nextNode->character = newChar;
+        if (current->character == newChar){
+            nextNode = nextNode->next;
+            joinTwoAdjacentNodes(current);
+        }
+        else{
+            nextNode = nextNode->next;
+            current = current->next;
+        }
+    }
+    return RLE_LIST_SUCCESS;
+*/
 
 RLEListResult RLEListMap(RLEList list, MapFunction map_function){
     if (list == NULL || map_function == NULL){
@@ -166,6 +185,31 @@ RLEListResult RLEListMap(RLEList list, MapFunction map_function){
     while (current != NULL){
         current->character = map_function(current->character);
         current = current->next;
+    }
+    current = list->next;
+    RLEList nextNode = current;
+    while (current != NULL && nextNode != NULL){
+        if (current->character == nextNode->character){
+            joinTwoAdjacentNodes(current);
+            nextNode = current->next;
+        }
+        else{
+            nextNode = nextNode->next;
+            current = current->next;
+        }
+    }
+    return RLE_LIST_SUCCESS;
+}
+
+static RLEListResult joinTwoAdjacentNodes(RLEList list)
+{
+    RLEList current = list;
+    RLEList nextNode = current->next;
+    if (nextNode != NULL && current->character == nextNode->character ){
+        current->numberOfCharacters += nextNode->numberOfCharacters;
+        RLEList deleteSameCharLink = nextNode;
+        current->next = deleteSameCharLink->next;
+        free(deleteSameCharLink);
     }
     return RLE_LIST_SUCCESS;
 }
@@ -202,14 +246,13 @@ char* RLEListExportToString(RLEList list, RLEListResult* result)
         index++;
         sprintf(&exportedString[index], "%d", current->numberOfCharacters);
         index += numberOfDigits(current->numberOfCharacters);
-        exportedString[index] = '\n';
+        exportedString[index] = NEXT_LINE;
         index++;
         current = current->next;
     }
     exportedString[index] = '\0';
     if (result != NULL){
         *result = RLE_LIST_SUCCESS;
-        return NULL;
     }
     return exportedString;
 }
