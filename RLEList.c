@@ -2,14 +2,20 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-//#define NDEGBUG
 
+//-----------------------------------//
 #define ADD_CHARACTER_AND_NEXT_LINE 2
 #define ERROR -1
 #define NEXT_LINE '\n'
-static int findIndex(RLEList list, int index);
+//-----------------------------------//
 static int numberOfDigits(int number);
+static int findIndex(RLEList list, int index);
+static int exportedStringLength(RLEList list);
 static RLEListResult joinTwoAdjacentNodes(RLEList list);
+static void exportedStringBuild(RLEList list, char *exportedString);
+//-----------------------------------//
+
+
 typedef struct RLEList_t{
     int numberOfCharacters;
     char character;
@@ -83,13 +89,14 @@ RLEListResult RLEListRemove(RLEList list, int index)
     if (list == NULL){
         return RLE_LIST_NULL_ARGUMENT;
     }
-
     if (index >= RLEListSize(list) || index < 0){
         return RLE_LIST_INDEX_OUT_OF_BOUNDS;
     }
+
     int numberOfNodes = findIndex(list, index);
     int i = 0;
     RLEList current = list;
+
     while (i < numberOfNodes - 1){
         current = current->next;
         i++;
@@ -154,38 +161,18 @@ char RLEListGet(RLEList list, int index, RLEListResult *result)
     }
     return current->character;
 }
-/*
-    if (list == NULL || map_function == NULL){
-        return RLE_LIST_NULL_ARGUMENT;
-    }
-    RLEList current = list->next;
-    current->character = map_function(current->character);
-    RLEList nextNode = current->next;
-    char newChar;
-    while (current != NULL && nextNode != NULL){
-        newChar = map_function(nextNode->character);
-        nextNode->character = newChar;
-        if (current->character == newChar){
-            nextNode = nextNode->next;
-            joinTwoAdjacentNodes(current);
-        }
-        else{
-            nextNode = nextNode->next;
-            current = current->next;
-        }
-    }
-    return RLE_LIST_SUCCESS;
-*/
 
 RLEListResult RLEListMap(RLEList list, MapFunction map_function){
     if (list == NULL || map_function == NULL){
         return RLE_LIST_NULL_ARGUMENT;
     }
+
     RLEList current = list->next;
     while (current != NULL){
         current->character = map_function(current->character);
         current = current->next;
     }
+
     current = list->next;
     RLEList nextNode = current;
     while (current != NULL && nextNode != NULL){
@@ -201,6 +188,8 @@ RLEListResult RLEListMap(RLEList list, MapFunction map_function){
     return RLE_LIST_SUCCESS;
 }
 
+//Checking the nodes "before and after" a node has to be removed totally (usually has 1 character)
+// and merge them if they contain the same character
 static RLEListResult joinTwoAdjacentNodes(RLEList list)
 {
     RLEList current = list;
@@ -222,6 +211,8 @@ char* RLEListExportToString(RLEList list, RLEListResult* result)
         }
         return NULL;
     }
+    int stringLength = exportedStringLength(list);
+    /*
     int stringLength = 0;
     RLEList current = list->next;
     while (current != NULL)
@@ -230,7 +221,7 @@ char* RLEListExportToString(RLEList list, RLEListResult* result)
         stringLength += ADD_CHARACTER_AND_NEXT_LINE;
         current = current->next;
     }
-
+    */
     char *exportedString = (char*) malloc(sizeof(char) * (stringLength + 1)  ); //+1 is for the '\0'
     if (!exportedString){
         if (result != NULL){
@@ -238,7 +229,9 @@ char* RLEListExportToString(RLEList list, RLEListResult* result)
             return NULL;
         }
     }
-    current = list->next;
+    exportedStringBuild(list, exportedString);
+    /*
+    RLEList current = list->next;
     int index = 0;
     while (current != NULL)
     {
@@ -251,6 +244,8 @@ char* RLEListExportToString(RLEList list, RLEListResult* result)
         current = current->next;
     }
     exportedString[index] = '\0';
+     */
+
     if (result != NULL){
         *result = RLE_LIST_SUCCESS;
     }
@@ -271,4 +266,36 @@ static int numberOfDigits(int number)
     }
 
     return numberOfDigits;
+}
+
+
+static int exportedStringLength(RLEList list)
+{
+    int stringLength = 0;
+    RLEList current = list->next;
+    while (current != NULL){
+    stringLength += numberOfDigits(current->numberOfCharacters);
+    stringLength += ADD_CHARACTER_AND_NEXT_LINE;
+    current = current->next;
+    }
+
+    return stringLength;
+}
+
+
+static void exportedStringBuild(RLEList list, char *exportedString)
+{
+    RLEList current = list->next;
+    int index = 0;
+    while (current != NULL)
+    {
+        exportedString[index] = current->character;
+        index++;
+        sprintf(&exportedString[index], "%d", current->numberOfCharacters);
+        index += numberOfDigits(current->numberOfCharacters);
+        exportedString[index] = NEXT_LINE;
+        index++;
+        current = current->next;
+    }
+    exportedString[index] = '\0';
 }
